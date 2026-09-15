@@ -1,5 +1,6 @@
 package com.roundsalmon4.phonetv
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,8 +17,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cast
 import androidx.compose.material3.darkColorScheme
@@ -41,6 +45,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -91,6 +96,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun PairingScreen(connected: Boolean) {
     var ipAddress by remember { mutableStateOf(getLocalIpAddress()) }
+    val context = LocalContext.current
+    val crashText = remember {
+        context.getSharedPreferences(PhoneTvApp.PREFS, Context.MODE_PRIVATE)
+            .getString("crash_text", null)
+    }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -105,7 +115,8 @@ private fun PairingScreen(connected: Boolean) {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+            modifier = Modifier.padding(bottom = 40.dp)
         ) {
             Icon(
                 imageVector = Icons.Filled.Cast,
@@ -127,6 +138,36 @@ private fun PairingScreen(connected: Boolean) {
                 fontWeight = FontWeight.Medium,
                 fontFamily = FontFamily.Monospace
             )
+
+            if (crashText != null) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "Last crash (reported to the PhoneTV developer)",
+                        color = Color(0xFFFF5252),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.9f)
+                            .height(140.dp)
+                            .verticalScroll(rememberScrollState())
+                            .padding(top = 4.dp)
+                    ) {
+                        Text(
+                            text = crashText,
+                            color = Color(0xFFFF8A80),
+                            fontSize = 14.sp,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                }
+            }
         }
     }
 }
