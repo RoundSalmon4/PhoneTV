@@ -37,7 +37,7 @@ private class FixedConnectionHeaderDraft : Draft_6455() {
 class CastReceiver(
     private val controller: TvPlayerController,
     port: Int = 8484
-) : WebSocketServer(InetSocketAddress(port), 0, listOf(FixedConnectionHeaderDraft())) {
+) : WebSocketServer(InetSocketAddress(port), 2, listOf(FixedConnectionHeaderDraft())) {
 
     private val json = Json { ignoreUnknownKeys = true }
     private val clients = mutableSetOf<WebSocket>()
