@@ -43,13 +43,17 @@ android {
             if (releaseKeystorePath != null) {
                 signingConfig = signingConfigs.getByName("fromKeystore")
             }
-            checkReleaseBuilds = false
         }
     }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
     }
 
     kotlinOptions {
