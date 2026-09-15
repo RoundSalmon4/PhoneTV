@@ -22,7 +22,8 @@
         android:label="@string/app_name"
         android:logo="@drawable/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/Theme.PhoneTV">
+        android:theme="@style/Theme.PhoneTV"
+        android:usesCleartextTraffic="true">
 
         <activity
             android:name=".MainActivity"
