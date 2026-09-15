@@ -58,7 +58,7 @@ class CastReceiver(
             return
         }
         when (message.type) {
-            "play" -> message.url?.let { controller.play(it, message.title) }
+            "play" -> message.url?.let { controller.play(it, message.title, message.position) }
             "pause" -> controller.pause()
             "resume" -> controller.resume()
             "seek" -> message.position?.let { controller.seekTo(it) }

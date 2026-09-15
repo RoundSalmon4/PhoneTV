@@ -98,7 +98,7 @@ class TvPlayerController(context: Context) {
         )
     }
 
-    fun play(url: String, title: String?) {
+    fun play(url: String, title: String?, positionMs: Long? = null) {
         val p = player ?: return
         val lower = url.lowercase()
         val mediaItem: MediaItem = when {
@@ -112,6 +112,7 @@ class TvPlayerController(context: Context) {
         _status.value = CastStatus(state = "buffering", title = title)
         p.setMediaItem(mediaItem)
         p.prepare()
+        positionMs?.takeIf { it > 0L }?.let { p.seekTo(it) }
         p.play()
     }
 
