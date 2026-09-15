@@ -12,7 +12,7 @@ import org.java_websocket.WebSocket
 import org.java_websocket.drafts.Draft_6455
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.handshake.HandshakeBuilder
-import org.java_websocket.handshake.IHandshake
+import org.java_websocket.handshake.ServerHandshakeBuilder
 import org.java_websocket.server.WebSocketServer
 import java.net.InetSocketAddress
 
@@ -24,8 +24,11 @@ import java.net.InetSocketAddress
  * canonical "Upgrade" value.
  */
 private class FixedConnectionHeaderDraft : Draft_6455() {
-    override fun acceptHandshake(handshakedata: IHandshake, builder: HandshakeBuilder): HandshakeBuilder {
-        val result = super.acceptHandshake(handshakedata, builder)
+    override fun postProcessHandshakeResponseAsServer(
+        request: ClientHandshake,
+        response: ServerHandshakeBuilder
+    ): HandshakeBuilder {
+        val result = super.postProcessHandshakeResponseAsServer(request, response)
         result.put("Connection", "Upgrade")
         return result
     }
