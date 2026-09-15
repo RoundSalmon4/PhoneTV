@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.java_websocket.Draft
 import org.java_websocket.WebSocket
+import org.java_websocket.drafts.Draft
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.handshake.HandshakeImpl1Server
 import org.java_websocket.handshake.ServerHandshakeBuilder
