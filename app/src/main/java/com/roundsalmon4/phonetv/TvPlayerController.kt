@@ -103,9 +103,9 @@ class TvPlayerController(context: Context) {
         val lower = url.lowercase()
         val mediaItem: MediaItem = when {
             lower.contains(".mpd") || lower.contains("dash") ->
-                MediaItem.Builder().setUri(url).setMimeType(MimeTypes.APPLICATION_DASH).build()
+                MediaItem.Builder().setUri(url).setMimeType(MimeTypes.APPLICATION_MPD).build()
             lower.contains(".m3u8") ->
-                MediaItem.Builder().setUri(url).setMimeType(MimeTypes.APPLICATION_HLS).build()
+                MediaItem.Builder().setUri(url).setMimeType(MimeTypes.APPLICATION_M3U8).build()
             else ->
                 MediaItem.fromUri(url)
         }

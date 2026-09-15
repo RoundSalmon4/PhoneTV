@@ -206,10 +206,19 @@ private fun formatTime(ms: Long): String {
 }
 
 private fun getLocalIpAddress(): String = try {
-    NetworkInterface.getNetworkInterfaces().asSequence()
-        .flatMap { it.inetAddresses.asIterable() }
-        .firstOrNull { !it.isLoopbackAddress && it is Inet4Address }
-        ?.hostAddress ?: "0.0.0.0"
+    val interfaces = NetworkInterface.getNetworkInterfaces() ?: return "0.0.0.0"
+    while (interfaces.hasMoreElements()) {
+        val networkInterface = interfaces.nextElement()
+        if (networkInterface.isLoopback) continue
+        val addresses = networkInterface.inetAddresses
+        while (addresses.hasMoreElements()) {
+            val address = addresses.nextElement()
+            if (address is Inet4Address && !address.isLoopbackAddress) {
+                return address.hostAddress ?: continue
+            }
+        }
+    }
+    "0.0.0.0"
 } catch (e: Exception) {
     "0.0.0.0"
 }
