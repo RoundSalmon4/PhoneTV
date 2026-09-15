@@ -1,5 +1,7 @@
 package com.roundsalmon4.phonetv
 
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +21,11 @@ class CastReceiver(
     private val json = Json { ignoreUnknownKeys = true }
     private val clients = mutableSetOf<WebSocket>()
 
+    // ExoPlayer is created on the main thread and rejects calls from any
+    // other thread. WebSocket frames arrive on Java-WebSocket's worker
+    // threads, so every command must hop back to the main looper.
+    private val mainHandler = Handler(Looper.getMainLooper())
+
     private val _connectionCount = MutableStateFlow(0)
     val connectionCount: StateFlow<Int> = _connectionCount.asStateFlow()
 
@@ -31,6 +38,7 @@ class CastReceiver(
     }
 
     override fun onMessage(conn: WebSocket, message: String) {
+        Log.d(TAG, "onMessage: $message")
         dispatch(message)
     }
 
@@ -57,15 +65,17 @@ class CastReceiver(
             Log.w(TAG, "Failed to parse cast message: $raw", e)
             return
         }
-        when (message.type) {
-            "play" -> message.url?.let { controller.play(it, message.title, message.position) }
-            "pause" -> controller.pause()
-            "resume" -> controller.resume()
-            "seek" -> message.position?.let { controller.seekTo(it) }
-            "stop" -> controller.stop()
-            "set_volume" -> message.volume?.let { controller.setVolume(it) }
-            "set_speed" -> message.speed?.let { controller.setSpeed(it) }
-            else -> Log.w(TAG, "Unknown message type: ${message.type}")
+        mainHandler.post {
+            when (message.type) {
+                "play" -> message.url?.let { controller.play(it, message.title, message.position) }
+                "pause" -> controller.pause()
+                "resume" -> controller.resume()
+                "seek" -> message.position?.let { controller.seekTo(it) }
+                "stop" -> controller.stop()
+                "set_volume" -> message.volume?.let { controller.setVolume(it) }
+                "set_speed" -> message.speed?.let { controller.setSpeed(it) }
+                else -> Log.w(TAG, "Unknown message type: ${message.type}")
+            }
         }
     }
 
