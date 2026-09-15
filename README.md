@@ -29,9 +29,11 @@ PhoneTV is not on the Google Play Store. Install it by sideloading the APK.
 
 1. Install the [Downloader app](https://www.aftvnews.com/downloader/) on your TV (from the Google Play Store or Amazon Appstore)
 2. Open Downloader and enter the URL field at the top
-3. Type the code for PhoneTV and press Go
+3. Type the code **6977947** and press Go
 4. The APK downloads and prompts to install
 5. If prompted, allow "Install unknown apps" for Downloader in your TV settings
+
+The code always points to the latest release, so it never needs to change. You can also share the short link [aftv.news/6977947](https://aftv.news/6977947) anywhere.
 
 ### Option 2: GitHub Releases
 
