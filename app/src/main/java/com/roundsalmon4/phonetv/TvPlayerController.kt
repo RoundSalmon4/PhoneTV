@@ -29,6 +29,24 @@ class TvPlayerController(context: Context) {
     private var player: ExoPlayer? = null
     private var ticker: Job? = null
 
+    private val playerListener = object : Player.Listener {
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            emitStatus()
+        }
+
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            emitStatus()
+        }
+
+        override fun onPlayerError(error: PlaybackException) {
+            _status.value = _status.value.copy(state = "error", error = error.errorCodeName)
+        }
+
+        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            emitStatus()
+        }
+    }
+
     val isPlaying: Boolean
         get() = player?.isPlaying == true
 
@@ -50,24 +68,6 @@ class TvPlayerController(context: Context) {
             .setLoadControl(loadControl)
             .build()
             .also { it.addListener(playerListener) }
-    }
-
-    private val playerListener = object : Player.Listener {
-        override fun onIsPlayingChanged(isPlaying: Boolean) {
-            emitStatus()
-        }
-
-        override fun onPlaybackStateChanged(playbackState: Int) {
-            emitStatus()
-        }
-
-        override fun onPlayerError(error: PlaybackException) {
-            _status.value = _status.value.copy(state = "error", error = error.errorCodeName)
-        }
-
-        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-            emitStatus()
-        }
     }
 
     private fun startTicker() {
