@@ -1,4 +1,4 @@
 extra.set("appVersionMajor", 0)
 extra.set("appVersionMinor", 1)
-extra.set("appVersionPatch", 5)
-extra.set("appVersionCode", 6)
+extra.set("appVersionPatch", 6)
+extra.set\("appVersionCode", 7)

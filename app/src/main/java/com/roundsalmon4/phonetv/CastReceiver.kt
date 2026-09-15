@@ -8,36 +8,31 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.java_websocket.Draft
 import org.java_websocket.WebSocket
-import org.java_websocket.drafts.Draft_6455
 import org.java_websocket.handshake.ClientHandshake
-import org.java_websocket.handshake.HandshakeBuilder
+import org.java_websocket.handshake.HandshakeImpl1Server
 import org.java_websocket.handshake.ServerHandshakeBuilder
 import org.java_websocket.server.WebSocketServer
 import java.net.InetSocketAddress
 
 /**
- * Java-WebSocket echoes whatever Connection header the client sent in its
- * 101 response (e.g. "keep-alive, Upgrade"). Strict clients such as OkHttp
- * 3.x and .NET reject that value and drop the socket immediately, so the
- * handshake succeeds but the connection dies. Always reply with the
- * canonical "Upgrade" value.
+ * Forces the Connection response header to 'Upgrade'. Java-WebSocket echoes
+ * the client's Connection value (e.g. 'keep-alive, Upgrade') into its 101
+ * response, which strict clients (OkHttp 3.x, .NET) reject and drop the
+ * socket over. Intercepting put() keeps the handshake compliant regardless
+ * of what the draft writes.
  */
-private class FixedConnectionHeaderDraft : Draft_6455() {
-    override fun postProcessHandshakeResponseAsServer(
-        request: ClientHandshake,
-        response: ServerHandshakeBuilder
-    ): HandshakeBuilder {
-        val result = super.postProcessHandshakeResponseAsServer(request, response)
-        result.put("Connection", "Upgrade")
-        return result
+private class FixedConnectionHandshake : HandshakeImpl1Server() {
+    override fun put(name: String, value: String) {
+        super.put(name, if (name.equals("Connection", ignoreCase = true)) "Upgrade" else value)
     }
 }
 
 class CastReceiver(
     private val controller: TvPlayerController,
     port: Int = 8484
-) : WebSocketServer(InetSocketAddress(port), 2, listOf(FixedConnectionHeaderDraft())) {
+) : WebSocketServer(InetSocketAddress(port), 2) {
 
     private val json = Json { ignoreUnknownKeys = true }
     private val clients = mutableSetOf<WebSocket>()
@@ -49,6 +44,14 @@ class CastReceiver(
 
     private val _connectionCount = MutableStateFlow(0)
     val connectionCount: StateFlow<Int> = _connectionCount.asStateFlow()
+
+    override fun onWebsocketHandshakeReceivedAsServer(
+        conn: WebSocket,
+        draft: Draft,
+        request: ClientHandshake
+    ): ServerHandshakeBuilder {
+        return FixedConnectionHandshake()
+    }
 
     override fun onOpen(conn: WebSocket, handshake: ClientHandshake) {
         synchronized(clients) {
