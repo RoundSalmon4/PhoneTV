@@ -46,7 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.ui.compose.ExperimentalMedia3UiComposeApi
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.compose.PlayerSurface
 import kotlinx.coroutines.delay
 import java.net.Inet4Address
@@ -132,7 +132,7 @@ private fun PairingScreen(connected: Boolean) {
 }
 
 @Composable
-@OptIn(ExperimentalMedia3UiComposeApi::class)
+@OptIn(UnstableApi::class)
 private fun PlayerScreen(controller: TvPlayerController, status: CastStatus) {
     val player = remember { controller.getPlayer() }
     var controlsVisible by remember { mutableStateOf(true) }
@@ -153,11 +153,11 @@ private fun PlayerScreen(controller: TvPlayerController, status: CastStatus) {
                 if (event.type != KeyEventType.KeyDown) return@onKeyEvent false
                 var handled = true
                 when (event.key) {
-                    Key.DpadCenter, Key.Enter ->
+                    Key.DirectionCenter, Key.Enter ->
                         if (controller.isPlaying) controller.pause() else controller.resume()
-                    Key.DpadLeft ->
+                    Key.DirectionLeft ->
                         player?.let { controller.seekTo(it.currentPosition - 10_000) }
-                    Key.DpadRight ->
+                    Key.DirectionRight ->
                         player?.let { controller.seekTo(it.currentPosition + 10_000) }
                     else -> handled = false
                 }
@@ -205,20 +205,22 @@ private fun formatTime(ms: Long): String {
     }
 }
 
-private fun getLocalIpAddress(): String = try {
-    val interfaces = NetworkInterface.getNetworkInterfaces() ?: return "0.0.0.0"
-    while (interfaces.hasMoreElements()) {
-        val networkInterface = interfaces.nextElement()
-        if (networkInterface.isLoopback) continue
-        val addresses = networkInterface.inetAddresses
-        while (addresses.hasMoreElements()) {
-            val address = addresses.nextElement()
-            if (address is Inet4Address && !address.isLoopbackAddress) {
-                return address.hostAddress ?: continue
+private fun getLocalIpAddress(): String {
+    return try {
+        val interfaces = NetworkInterface.getNetworkInterfaces() ?: return "0.0.0.0"
+        while (interfaces.hasMoreElements()) {
+            val networkInterface = interfaces.nextElement()
+            if (networkInterface.isLoopback) continue
+            val addresses = networkInterface.inetAddresses
+            while (addresses.hasMoreElements()) {
+                val address = addresses.nextElement()
+                if (address is Inet4Address && !address.isLoopbackAddress) {
+                    return address.hostAddress ?: continue
+                }
             }
         }
+        "0.0.0.0"
+    } catch (e: Exception) {
+        "0.0.0.0"
     }
-    "0.0.0.0"
-} catch (e: Exception) {
-    "0.0.0.0"
 }
