@@ -33,10 +33,12 @@ jobs:
       - name: Read version from gradle
         id: version
         run: |
-          VERSION_NAME=$(grep 'versionName' app/build.gradle.kts | grep -o '"[0-9.]*"' | tr -d '"')
-          echo "version=v${VERSION_NAME}" >> $GITHUB_OUTPUT
-          echo "version_name=${VERSION_NAME}" >> $GITHUB_OUTPUT
-          echo "Release version: v${VERSION_NAME}"
+          MAJOR=$(grep 'appVersionMajor' gradle/version.gradle.kts | grep -o '[0-9]*')
+          MINOR=$(grep 'appVersionMinor' gradle/version.gradle.kts | grep -o '[0-9]*')
+          PATCH=$(grep 'appVersionPatch' gradle/version.gradle.kts | grep -o '[0-9]*')
+          VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Release version: $VERSION"
 
       - name: Decode keystore
         env:

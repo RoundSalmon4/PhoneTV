@@ -5,6 +5,13 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+apply(from = rootProject.file("gradle/version.gradle.kts"))
+
+val appVersionCode: Int by extra
+val appVersionMajor: Int by extra
+val appVersionMinor: Int by extra
+val appVersionPatch: Int by extra
+
 android {
     namespace = "com.roundsalmon4.phonetv"
     compileSdk = 35
@@ -13,8 +20,8 @@ android {
         applicationId = "com.roundsalmon4.phonetv"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = appVersionCode
+        versionName = "$appVersionMajor.$appVersionMinor.$appVersionPatch"
     }
 
     signingConfigs {
