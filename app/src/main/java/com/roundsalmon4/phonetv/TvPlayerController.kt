@@ -172,9 +172,9 @@ class TvPlayerController(context: Context) {
         }
         val group = bestGroup ?: return
         pendingQuality = null
+        val override = TrackSelectionOverride(group.mediaTrackGroup, listOf(bestIndex))
         selector.setParameters(
-            selector.buildUponParameters()
-                .setOverrideForType(TrackSelectionOverride(group, bestIndex))
+            selector.buildUponParameters().addOverride(override)
         )
     }
 
