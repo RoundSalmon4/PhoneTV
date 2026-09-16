@@ -114,6 +114,22 @@ class CastReceiver(
         }
     }
 
+    /**
+     * Tells the sender (PhoneTube) that the user ended the cast from the TV's
+     * remote, so it can end its session and resume local playback.
+     */
+    fun notifyStopped() {
+        val payload = "{\"type\":\"stopped\"}"
+        Log.i(TAG, "notifyStopped: informing senders playback ended on the TV")
+        synchronized(clients) {
+            clients.toList().forEach { client ->
+                if (client.isOpen) {
+                    client.send(payload)
+                }
+            }
+        }
+    }
+
     override fun start() {
         super.start()
         Log.i(TAG, "CastReceiver starting on port $port")

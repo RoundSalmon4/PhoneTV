@@ -3,6 +3,7 @@ package com.roundsalmon4.phonetv
 import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
@@ -80,7 +81,14 @@ class MainActivity : ComponentActivity() {
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
                     label = "screen"
                 ) { isIdle ->
-                    if (isIdle) PairingScreen(clients > 0) else PlayerScreen(controller, status)
+                    if (isIdle) PairingScreen(clients > 0) else PlayerScreen(
+                        controller,
+                        status,
+                        onStopCast = {
+                            controller.stop()
+                            receiver.notifyStopped()
+                        }
+                    )
                 }
             }
         }
@@ -174,10 +182,17 @@ private fun PairingScreen(connected: Boolean) {
 
 @Composable
 @OptIn(UnstableApi::class)
-private fun PlayerScreen(controller: TvPlayerController, status: CastStatus) {
+private fun PlayerScreen(
+    controller: TvPlayerController,
+    status: CastStatus,
+    onStopCast: () -> Unit
+) {
     val player = remember { controller.getPlayer() }
     var controlsVisible by remember { mutableStateOf(true) }
     val focus = remember { FocusRequester() }
+
+    // TV remote Back ends the cast and returns to the pairing screen.
+    BackHandler(onBack = onStopCast)
 
     LaunchedEffect(Unit) { focus.requestFocus() }
     LaunchedEffect(controlsVisible) {
