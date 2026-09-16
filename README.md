@@ -87,6 +87,25 @@ The TV also responds to its remote while casting:
 |---|---|
 | Center / OK | Play or pause |
 | Left / Right | Seek back / forward 10 seconds |
+| Back | Stop the cast and return to the pairing screen |
+
+### Stopping a cast
+
+A cast runs on the TV until one of these happens:
+
+- Press **Back** on the TV remote (or use **Disconnect** from PhoneTube's cast menu) to stop it yourself
+- **Force-stop** PhoneTube on the phone (Settings -> Apps -> PhoneTube -> Force stop), or let the OS kill it — the TV stops itself when the phone's connection closes
+
+Note that simply **swiping PhoneTube away from recents does not stop the cast**: the app keeps running in the background and its connection to the TV stays open, so the TV keeps playing (and will immediately take over whenever you open a new video in PhoneTube). This is intentional and matches how other casting apps behave.
+
+### Casting with a VPN (example: ProtonVPN)
+
+Casting uses a direct connection to the TV on your local network, so the phone's VPN must be told to let local traffic bypass the tunnel. With ProtonVPN on Android:
+
+1. In the phone's **VPN settings** (GrapheneOS / Android): turn **off "Block connections without VPN"** (VPN lockdown). This setting blocks all non-tunnel traffic at the OS level and would otherwise prevent the local cast connection, no matter how the VPN app is configured.
+2. In the **ProtonVPN app**: Connection / Advanced -> enable local network access, and choose the **"direct connections"** option for it. This excludes your local network from the tunnel so the phone can reach the TV directly. Other VPN apps offer an equivalent "allow local network / send local network traffic" option.
+
+With that combination the cast works while everything else still goes through the VPN tunnel.
 
 ## What happens on each source
 
