@@ -2,6 +2,7 @@ package com.roundsalmon4.phonetv
 
 import android.content.Context
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -72,6 +73,17 @@ class MainActivity : ComponentActivity() {
             MaterialTheme(colorScheme = remember { darkColorScheme() }) {
                 val status by controller.status.collectAsStateWithLifecycle()
                 val clients by receiver.connectionCount.collectAsState()
+
+                // Keep the TV awake while a cast is playing so the screensaver
+                // does not kick in; allow it again when idle.
+                val activityWindow = (LocalContext.current as ComponentActivity).window
+                LaunchedEffect(status.state) {
+                    if (status.state == "idle") {
+                        activityWindow.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    } else {
+                        activityWindow.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    }
+                }
 
                 LaunchedEffect(Unit) {
                     controller.status.collect { receiver.broadcastStatus(it) }
