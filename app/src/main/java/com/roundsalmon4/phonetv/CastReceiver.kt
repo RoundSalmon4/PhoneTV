@@ -70,6 +70,11 @@ class CastReceiver(
         synchronized(clients) {
             clients -= conn
             _connectionCount.value = clients.size
+            // If no sender is attached anymore (PhoneTube closed or was
+            // killed), stop playback so the TV doesn't keep playing forever.
+            if (clients.isEmpty()) {
+                mainHandler.post { controller.stop() }
+            }
         }
         Log.i(TAG, "Client disconnected: ${conn.remoteSocketAddress} ($code $reason)")
     }
