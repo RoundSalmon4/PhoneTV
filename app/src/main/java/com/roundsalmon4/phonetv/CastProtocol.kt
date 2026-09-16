@@ -9,7 +9,17 @@ data class CastMessage(
     val title: String? = null,
     val position: Long? = null,
     val volume: Float? = null,
-    val speed: Float? = null
+    val speed: Float? = null,
+    val subtitles: List<CastSubtitle>? = null,
+    val quality: Int? = null
+)
+
+@Serializable
+data class CastSubtitle(
+    val url: String,
+    val languageCode: String = "",
+    val name: String = "",
+    val mimeType: String = "text/vtt"
 )
 
 @Serializable
