@@ -111,6 +111,8 @@ class CastReceiver(
                 "stop" -> controller.stop()
                 "set_volume" -> message.volume?.let { controller.setVolume(it) }
                 "set_speed" -> message.speed?.let { controller.setSpeed(it) }
+                "set_quality" -> message.quality?.let { controller.setQuality(it) }
+                "set_subtitle" -> controller.setSubtitle(message.subtitleIndex)
                 else -> Log.w(TAG, "Unknown message type: ${message.type}")
             }
         }

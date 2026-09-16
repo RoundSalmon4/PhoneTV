@@ -37,6 +37,7 @@ class TvPlayerController(context: Context) {
     private var trackSelector: DefaultTrackSelector? = null
     private var ticker: Job? = null
     private var pendingQuality: Int? = null
+    private var pendingSubtitle: Int? = null
 
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -49,6 +50,10 @@ class TvPlayerController(context: Context) {
 
         override fun onTracksChanged(tracks: Tracks) {
             pendingQuality?.let { applyQuality(it) }
+            pendingSubtitle?.let { index ->
+                pendingSubtitle = null
+                setSubtitle(index)
+            }
             emitStatus()
         }
 
@@ -118,7 +123,9 @@ class TvPlayerController(context: Context) {
         title: String?,
         positionMs: Long? = null,
         subtitles: List<CastSubtitle>? = null,
-        quality: Int? = null
+        quality: Int? = null,
+        speed: Float? = null,
+        activeSubtitleIndex: Int? = null
     ) {
         val p = player ?: return
         val lower = url.lowercase()
@@ -138,11 +145,49 @@ class TvPlayerController(context: Context) {
             builder.setSubtitleConfigurations(configurations)
         }
         pendingQuality = quality?.takeIf { it > 0 }
-        _status.value = CastStatus(state = "buffering", title = title)
+        pendingSubtitle = activeSubtitleIndex
+        _status.value = CastStatus(state = "buffering", title = title, )
         p.setMediaItem(builder.build())
         p.prepare()
         positionMs?.takeIf { it > 0L }?.let { p.seekTo(it) }
+        speed?.takeIf { it in 0.25f..3f }?.let { p.setPlaybackSpeed(it) }
         p.play()
+    }
+
+    /** Applies a requested video height live (from the sender's quality picker). */
+    fun setQuality(height: Int) {
+        applyQuality(height)
+    }
+
+    /**
+     * Mirrors the sender's subtitle selection. Index is into the subtitle list
+     * sent with the play command: -1 disables subtitles, null lets ExoPlayer
+     * auto-select, and any other index overrides the text track.
+     */
+    fun setSubtitle(indexArg: Int?) {
+        val p = player ?: return
+        val selector = trackSelector ?: return
+        val textGroups = p.currentTracks.groups.filter { it.type == C.TRACK_TYPE_TEXT }
+        if (textGroups.isEmpty()) {
+            pendingSubtitle = indexArg
+            return
+        }
+        val group = textGroups.first()
+        val builder = selector.buildUponParameters().setRendererDisabled(C.TRACK_TYPE_TEXT, false)
+        when {
+            indexArg == null -> Unit // auto-select, renderer enabled
+            indexArg == -1 -> {
+                selector.setParameters(selector.buildUponParameters().setRendererDisabled(C.TRACK_TYPE_TEXT, true))
+                return
+            }
+            group.length > 0 -> {
+                val idx = indexArg.coerceAtMost(group.length - 1)
+                val override = TrackSelectionOverride(group.mediaTrackGroup, listOf(idx))
+                selector.setParameters(builder.addOverride(override))
+                return
+            }
+        }
+        selector.setParameters(builder)
     }
 
     /**

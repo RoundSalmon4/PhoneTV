@@ -11,7 +11,9 @@ data class CastMessage(
     val volume: Float? = null,
     val speed: Float? = null,
     val subtitles: List<CastSubtitle>? = null,
-    val quality: Int? = null
+    val quality: Int? = null,
+    val activeSubtitleIndex: Int? = null,
+    val subtitleIndex: Int? = null
 )
 
 @Serializable
