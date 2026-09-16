@@ -10,7 +10,7 @@ PhoneTube on your phone pairs with PhoneTV over your local network and hands off
 
 | Piece | Device | Role |
 |-------|--------|------|
-| PhoneTube | Phone / tablet | Finds the playable stream URL and sends it to the TV |
+| PhoneTube | Phone | Finds the playable stream URL and sends it to the TV |
 | PhoneTV | Android TV / Fire TV | Plays the stream and reports playback state back |
 
 The TV shows an address like `192.168.1.50 : 8484` on screen. You add that address to PhoneTube once and the two stay paired for future casts.
@@ -18,7 +18,7 @@ The TV shows an address like `192.168.1.50 : 8484` on screen. You add that addre
 ## Requirements
 
 - An Android TV, Google TV, Fire TV, or Android TV box (Android 7.0 / API 24+)
-- PhoneTube installed on your phone or tablet
+- PhoneTube installed on your phone
 - Both devices on the same network
 
 ## Installation
