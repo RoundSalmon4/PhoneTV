@@ -79,6 +79,8 @@ You can also pair from the player screen: tap the cast icon in the player contro
 5. Use the phone controls to play, pause, or seek; the actions are mirrored to the TV
 6. Tap the cast icon again and pick **Disconnect** to stop. Your phone resumes playback from the TV position
 
+**Note on Continue Playing with a VPN:** when a casted video ends, PhoneTube resolves the next video's stream on the phone before handing it to the TV. If the phone's VPN uses an egress IP that YouTube blocks for playback, the next video may fail to load (you'll see "YouTube is blocking playback on this network"). Continue Playing over a cast works reliably without a VPN, or with a VPN provider/region that YouTube permits for playback.
+
 ### TV controls
 
 The TV also responds to its remote while casting:
