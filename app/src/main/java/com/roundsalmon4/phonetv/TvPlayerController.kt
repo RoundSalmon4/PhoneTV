@@ -2,6 +2,7 @@ package com.roundsalmon4.phonetv
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
@@ -271,5 +272,9 @@ pendingQuality = quality?.takeIf { it > 0 }
             it.release()
         }
         player = null
+    }
+
+    private companion object {
+        const val TAG = "TvPlayer"
     }
 }
