@@ -38,6 +38,9 @@ class TvPlayerController(context: Context) {
     private var ticker: Job? = null
     private var pendingQuality: Int? = null
     private var pendingSubtitle: Int? = null
+    // The subtitle list sent with the last play command, used to resolve the
+    // selected CC by language/label instead of trusting track ordering.
+    private var lastSubtitleList: List<CastSubtitle>? = null
 
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -144,9 +147,10 @@ class TvPlayerController(context: Context) {
             }
             builder.setSubtitleConfigurations(configurations)
         }
-        pendingQuality = quality?.takeIf { it > 0 }
+pendingQuality = quality?.takeIf { it > 0 }
         pendingSubtitle = activeSubtitleIndex
-        _status.value = CastStatus(state = "buffering", title = title, )
+        lastSubtitleList = subtitles
+        _status.value = CastStatus(state = "buffering", title = title)
         p.setMediaItem(builder.build())
         p.prepare()
         positionMs?.takeIf { it > 0L }?.let { p.seekTo(it) }
@@ -181,7 +185,24 @@ class TvPlayerController(context: Context) {
                 return
             }
             group.length > 0 -> {
-                val idx = indexArg.coerceAtMost(group.length - 1)
+                // Prefer matching the sender's subtitle by language/label (the
+                // manifest track order can differ from the cast list order).
+                val target = lastSubtitleList?.getOrNull(indexArg)
+                var matchIndex = -1
+                if (target != null) {
+                    for (i in 0 until group.length) {
+                        val format = group.getTrackFormat(i)
+                        val langMatch = target.languageCode.isNotBlank() &&
+                            target.languageCode.equals(format.language, ignoreCase = true)
+                        val labelMatch = target.name.isNotBlank() &&
+                            target.name.equals(format.label, ignoreCase = true)
+                        if (langMatch || labelMatch) {
+                            matchIndex = i
+                            break
+                        }
+                    }
+                }
+                val idx = if (matchIndex >= 0) matchIndex else indexArg.coerceAtMost(group.length - 1)
                 val override = TrackSelectionOverride(group.mediaTrackGroup, listOf(idx))
                 selector.setParameters(builder.addOverride(override))
                 return
