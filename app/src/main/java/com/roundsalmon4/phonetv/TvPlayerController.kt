@@ -38,8 +38,11 @@ class TvPlayerController(context: Context) {
     private var ticker: Job? = null
     private var pendingQuality: Int? = null
     private var pendingSubtitle: Int? = null
-    // The subtitle list sent with the last play command, used to resolve the
-    // selected CC by language/label instead of trusting track ordering.
+    // Desired playback speed, reapplied whenever the player becomes ready so
+    // the prepared/adaptive state can't reset it.
+    private var desiredSpeed: Float? = null
+    // The subtitle list sent with the last play command, used to map the
+    // sender's CC selection to a language.
     private var lastSubtitleList: List<CastSubtitle>? = null
 
     private val playerListener = object : Player.Listener {
@@ -48,6 +51,9 @@ class TvPlayerController(context: Context) {
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
+            if (playbackState == Player.STATE_READY) {
+                desiredSpeed?.let { speed -> player?.setPlaybackSpeed(speed) }
+            }
             emitStatus()
         }
 
@@ -150,6 +156,8 @@ class TvPlayerController(context: Context) {
 pendingQuality = quality?.takeIf { it > 0 }
         pendingSubtitle = activeSubtitleIndex
         lastSubtitleList = subtitles
+        desiredSpeed = speed?.takeIf { it > 0f }
+        Log.i(TAG, "play: url=$url speed=$speed subtitle=$activeSubtitleIndex subs=${subtitles?.size}")
         _status.value = CastStatus(state = "buffering", title = title)
         p.setMediaItem(builder.build())
         p.prepare()
@@ -169,46 +177,31 @@ pendingQuality = quality?.takeIf { it > 0 }
      * auto-select, and any other index overrides the text track.
      */
     fun setSubtitle(indexArg: Int?) {
-        val p = player ?: return
         val selector = trackSelector ?: return
-        val textGroups = p.currentTracks.groups.filter { it.type == C.TRACK_TYPE_TEXT }
-        if (textGroups.isEmpty()) {
-            pendingSubtitle = indexArg
-            return
-        }
-        val group = textGroups.first()
         val builder = selector.buildUponParameters().setRendererDisabled(C.TRACK_TYPE_TEXT, false)
         when {
-            indexArg == null -> Unit // auto-select, renderer enabled
+            indexArg == null -> {
+                // Auto: enable the renderer and let ExoPlayer pick by language.
+                selector.setParameters(builder)
+                Log.i(TAG, "setSubtitle: auto")
+            }
             indexArg == -1 -> {
                 selector.setParameters(selector.buildUponParameters().setRendererDisabled(C.TRACK_TYPE_TEXT, true))
-                return
+                Log.i(TAG, "setSubtitle: off")
             }
-            group.length > 0 -> {
-                // Prefer matching the sender's subtitle by language/label (the
-                // manifest track order can differ from the cast list order).
-                val target = lastSubtitleList?.getOrNull(indexArg)
-                var matchIndex = -1
-                if (target != null) {
-                    for (i in 0 until group.length) {
-                        val format = group.getTrackFormat(i)
-                        val langMatch = target.languageCode.isNotBlank() &&
-                            target.languageCode.equals(format.language, ignoreCase = true)
-                        val labelMatch = target.name.isNotBlank() &&
-                            target.name.equals(format.label, ignoreCase = true)
-                        if (langMatch || labelMatch) {
-                            matchIndex = i
-                            break
-                        }
-                    }
+            else -> {
+                // Enable captions in the sender's chosen language; ExoPlayer's
+                // track selector picks the matching track automatically.
+                val lang = lastSubtitleList?.getOrNull(indexArg)?.languageCode
+                if (lang.isNullOrBlank()) {
+                    selector.setParameters(builder)
+                    Log.i(TAG, "setSubtitle: index=$indexArg no language (auto)")
+                } else {
+                    selector.setParameters(builder.setPreferredTextLanguage(lang))
+                    Log.i(TAG, "setSubtitle: index=$indexArg lang=$lang")
                 }
-                val idx = if (matchIndex >= 0) matchIndex else indexArg.coerceAtMost(group.length - 1)
-                val override = TrackSelectionOverride(group.mediaTrackGroup, listOf(idx))
-                selector.setParameters(builder.addOverride(override))
-                return
             }
         }
-        selector.setParameters(builder)
     }
 
     /**
