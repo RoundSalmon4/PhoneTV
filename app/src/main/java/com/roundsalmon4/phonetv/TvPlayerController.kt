@@ -80,7 +80,7 @@ class TvPlayerController(context: Context) {
 
         override fun onPlayerError(error: PlaybackException) {
             val p = player
-            if (p != null && !recoveredFromError) {
+            if (p != null && !recoveredFromError && p.currentMediaItem != null) {
                 recoveredFromError = true
                 val pos = p.currentPosition.coerceAtLeast(0L)
                 val item = p.currentMediaItem
@@ -119,6 +119,11 @@ class TvPlayerController(context: Context) {
         val renderersFactory = DefaultRenderersFactory(appContext)
             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
         val selector = DefaultTrackSelector(appContext)
+        // The VP9 hardware decoder on this Fire TV intermittently crashes
+        // (vpud SIGSEGV), so prefer H.264 whenever the manifest offers it.
+        selector.parameters = selector.parameters.buildUpon()
+            .setPreferredVideoMimeType(MimeTypes.VIDEO_H264)
+            .build()
         trackSelector = selector
         val loadControl = DefaultLoadControl()
         player = ExoPlayer.Builder(appContext)
@@ -295,12 +300,6 @@ pendingQuality = quality?.takeIf { it > 0 }
         val p = player ?: return
         p.stop()
         p.clearMediaItems()
-        // Detach the player's video output so the SurfaceView the cast used
-        // stops holding a black frame on top of the pairing screen once the
-        // player screen leaves composition. This prevents the stale black
-        // layer Fire TV keeps when the surface is never released.
-        p.clearVideoSurface()
-        p.setVideoSurfaceView(null)
         _status.value = CastStatus()
         _currentCues.value = emptyList()
     }
