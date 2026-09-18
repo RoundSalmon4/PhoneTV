@@ -75,9 +75,22 @@ You can also pair from the player screen: tap the cast icon in the player contro
 1. Start playing any video in PhoneTube (YouTube, PeerTube, Streamable, or an IPTV channel)
 2. Tap the **cast icon** in the player controls
 3. Select your TV from the list (tap **Cast**)
-4. The video resumes on the TV from roughly where you were. Your phone pauses as a remote
-5. Use the phone controls to play, pause, or seek; the actions are mirrored to the TV
-6. Tap the cast icon again and pick **Disconnect** to stop. Your phone resumes playback from the TV position
+4. The video resumes on the TV from roughly where you were. Your phone pauses and becomes a remote
+5. While casting, PhoneTube mirrors its player state to the TV: open any new video and the TV switches to it, and the phone's player stays ready so controls respond and disconnecting resumes instantly
+6. Browsing away and returning to the same video resumes at the TV's position instead of restarting
+7. Tap the cast icon again and pick **Disconnect** to stop. Your phone resumes playback from the TV position
+
+### What mirrors to the TV
+
+PhoneTube is the source of truth and mirrors these to the receiver:
+
+- **Playback speed** (including a preselected speed, from 0.25x to 3x)
+- **Video quality** (Default Quality at handoff, and live changes mid-cast)
+- **Captions** (subtitles, including auto-generated tracks; toggling CC on or off updates the TV)
+- **Chapters and timestamp links** (seek the TV directly)
+- **Volume / mute**
+- **SponsorBlock** (skips are applied on the TV using its reported position)
+- **Continue Playing** (when a casted video ends, the next one hands off to the TV)
 
 **Note on Continue Playing with a VPN:** when a casted video ends, PhoneTube resolves the next video's stream on the phone before handing it to the TV. If the phone's VPN uses an egress IP that YouTube blocks for playback, the next video may fail to load (you'll see "YouTube is blocking playback on this network"). Continue Playing over a cast works reliably without a VPN, or with a VPN provider/region that YouTube permits for playback.
 
