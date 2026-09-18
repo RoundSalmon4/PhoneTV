@@ -295,6 +295,12 @@ pendingQuality = quality?.takeIf { it > 0 }
         val p = player ?: return
         p.stop()
         p.clearMediaItems()
+        // Detach the player's video output so the SurfaceView the cast used
+        // stops holding a black frame on top of the pairing screen once the
+        // player screen leaves composition. This prevents the stale black
+        // layer Fire TV keeps when the surface is never released.
+        p.clearVideoSurface()
+        p.clearVideoSurfaceView()
         _status.value = CastStatus()
         _currentCues.value = emptyList()
     }
