@@ -113,7 +113,7 @@ class TvPlayerController(context: Context) {
             _currentCues.value = cues.cues
         }
 
-        override fun onRenderedFirstFrame(player: Player) {
+        override fun onRenderedFirstFrame() {
             hasRenderedFrame = true
             if (_hangWarning.value) _hangWarning.value = false
         }
