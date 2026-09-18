@@ -53,6 +53,9 @@ class TvPlayerController(context: Context) {
     // The subtitle list sent with the last play command, used to map the
     // sender's CC selection to a language.
     private var lastSubtitleList: List<CastSubtitle>? = null
+    // One-shot recovery: a fatal decoder/OS error restarts the current media
+    // once so a transient Fire TV video-codec crash doesn't freeze the cast.
+    private var recoveredFromError = false
 
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -76,6 +79,20 @@ class TvPlayerController(context: Context) {
         }
 
         override fun onPlayerError(error: PlaybackException) {
+            val p = player
+            if (p != null && !recoveredFromError) {
+                recoveredFromError = true
+                val pos = p.currentPosition.coerceAtLeast(0L)
+                val item = p.currentMediaItem
+                if (item != null) {
+                    Log.i(TAG, "onPlayerError: recovering once (${error.errorCodeName}) at $pos")
+                    p.setMediaItem(item)
+                    p.prepare()
+                    p.seekTo(pos)
+                    p.play()
+                    return
+                }
+            }
             _status.value = _status.value.copy(state = "error", error = error.errorCodeName)
         }
 
@@ -170,6 +187,7 @@ pendingQuality = quality?.takeIf { it > 0 }
         pendingSubtitle = activeSubtitleIndex
         lastSubtitleList = subtitles
         desiredSpeed = speed?.takeIf { it > 0f }
+        recoveredFromError = false
         Log.i(TAG, "play: url=$url speed=$speed subtitle=$activeSubtitleIndex subs=${subtitles?.size}")
         _status.value = CastStatus(state = "buffering", title = title)
         p.setMediaItem(builder.build())
