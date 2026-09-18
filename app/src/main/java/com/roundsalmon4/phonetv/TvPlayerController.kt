@@ -300,7 +300,7 @@ pendingQuality = quality?.takeIf { it > 0 }
         // player screen leaves composition. This prevents the stale black
         // layer Fire TV keeps when the surface is never released.
         p.clearVideoSurface()
-        p.clearVideoSurfaceView()
+        p.setVideoSurfaceView(null)
         _status.value = CastStatus()
         _currentCues.value = emptyList()
     }
