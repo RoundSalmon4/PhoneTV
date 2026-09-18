@@ -101,6 +101,7 @@ class TvPlayerController(context: Context) {
         }
 
         override fun onCues(cues: CueGroup) {
+            Log.i(TAG, "onCues: ${cues.cues.size} cue(s) into overlay")
             _currentCues.value = cues.cues
         }
     }
@@ -136,7 +137,11 @@ class TvPlayerController(context: Context) {
 
     private fun startTicker() {
         ticker = scope.launch {
+            var tickCount = 0
             while (true) {
+                if (++tickCount % 20 == 0) {
+                    Log.i(TAG, "ticker: state=${_status.value.state} cues=${_currentCues.value.size}")
+                }
                 emitStatus()
                 delay(500)
             }
