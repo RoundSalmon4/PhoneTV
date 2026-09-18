@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cast
@@ -313,10 +312,10 @@ private fun SubtitleOverlay(cues: List<Cue>, modifier: Modifier) {
         contentAlignment = Alignment.BottomCenter
     ) {
         for (cue in cues) {
-            val text = cue.text
-            if (text.isNullOrBlank()) continue
-            BasicText(
-                text = text,
+            val caption = cue.text
+            if (caption.isNullOrBlank()) continue
+            Text(
+                text = caption,
                 color = Color.White,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.SemiBold,
