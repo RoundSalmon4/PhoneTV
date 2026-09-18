@@ -312,8 +312,7 @@ private fun SubtitleOverlay(cues: List<Cue>, modifier: Modifier) {
         contentAlignment = Alignment.BottomCenter
     ) {
         for (cue in cues) {
-            val caption = cue.text
-            if (caption.isNullOrBlank()) continue
+            val caption = cue.text?.toString()?.takeIf { it.isNotBlank() } ?: continue
             Text(
                 text = caption,
                 color = Color.White,
