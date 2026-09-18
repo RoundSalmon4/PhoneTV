@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cast
@@ -53,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.Cue
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.compose.PlayerSurface
 import kotlinx.coroutines.delay
@@ -202,6 +204,7 @@ private fun PlayerScreen(
     val player = remember { controller.getPlayer() }
     var controlsVisible by remember { mutableStateOf(true) }
     val focus = remember { FocusRequester() }
+    val cues by controller.currentCues.collectAsState()
 
     // TV remote Back ends the cast and returns to the pairing screen.
     BackHandler(onBack = onStopCast)
@@ -234,6 +237,7 @@ private fun PlayerScreen(
             }
     ) {
         player?.let { PlayerSurface(player = it, modifier = Modifier.fillMaxSize()) }
+        SubtitleOverlay(cues = cues, modifier = Modifier.align(Alignment.BottomCenter))
         AnimatedVisibility(
             visible = controlsVisible,
             modifier = Modifier.align(Alignment.TopCenter),
@@ -290,5 +294,34 @@ private fun getLocalIpAddress(): String {
         "0.0.0.0"
     } catch (e: Exception) {
         "0.0.0.0"
+    }
+}
+
+/**
+ * Renders caption cues from ExoPlayer onto the video surface.
+ * Media3's compose [PlayerSurface] does not draw captions itself,
+ * so this mirrors what [com.roundsalmon4.phonetube.ui.player.SubtitleOverlay]
+ * does in PhoneTube.
+ */
+@Composable
+private fun SubtitleOverlay(cues: List<Cue>, modifier: Modifier) {
+    if (cues.isEmpty()) return
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp, vertical = 24.dp),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        for (cue in cues) {
+            val text = cue.text
+            if (text.isNullOrBlank()) continue
+            BasicText(
+                text = text,
+                color = Color.White,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(4.dp)
+            )
+        }
     }
 }

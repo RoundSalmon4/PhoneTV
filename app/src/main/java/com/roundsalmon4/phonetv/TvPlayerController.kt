@@ -4,12 +4,14 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.media3.common.C
+import androidx.media3.common.Cue
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
+import androidx.media3.common.text.Cues
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -33,6 +35,11 @@ class TvPlayerController(context: Context) {
 
     private val _status = MutableStateFlow(CastStatus())
     val status: StateFlow<CastStatus> = _status
+
+    // Currently visible caption cues, exposed so the UI can render an overlay
+    // (ExoPlayer decodes captions but does not draw them itself).
+    private val _currentCues = MutableStateFlow<List<Cue>>(emptyList())
+    val currentCues: StateFlow<List<Cue>> = _currentCues.asStateFlow()
 
     private var player: ExoPlayer? = null
     private var trackSelector: DefaultTrackSelector? = null
@@ -73,6 +80,10 @@ class TvPlayerController(context: Context) {
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             emitStatus()
+        }
+
+        override fun onCues(cues: Cues) {
+            _currentCues.value = cues.cues
         }
     }
 
@@ -263,6 +274,7 @@ pendingQuality = quality?.takeIf { it > 0 }
         p.stop()
         p.clearMediaItems()
         _status.value = CastStatus()
+        _currentCues.value = emptyList()
     }
 
     fun release() {
