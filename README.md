@@ -89,7 +89,7 @@ PhoneTube is the source of truth and mirrors these to the receiver:
 - **Captions** (subtitles, including auto-generated tracks; toggling CC on or off updates the TV)
 - **Chapters and timestamp links** (seek the TV directly)
 - **Volume / mute**
-- **SponsorBlock** (skips are applied on the TV using its reported position)
+- **SponsorBlock** (skips are applied on the TV using its reported position; when PhoneTube's category setting uses Toast, the skip notice is shown on the TV as well)
 - **Continue Playing** (when a casted video ends, the next one hands off to the TV)
 
 **Note on Continue Playing with a VPN:** when a casted video ends, PhoneTube resolves the next video's stream on the phone before handing it to the TV. If the phone's VPN uses an egress IP that YouTube blocks for playback, the next video may fail to load (you'll see "YouTube is blocking playback on this network"). Continue Playing over a cast works reliably without a VPN, or with a VPN provider/region that YouTube permits for playback.
@@ -121,6 +121,12 @@ Casting uses a direct connection to the TV on your local network, so the phone's
 2. In the **ProtonVPN app**: Connection / Advanced -> enable local network access, and choose the **"direct connections"** option for it. This excludes your local network from the tunnel so the phone can reach the TV directly. Other VPN apps offer an equivalent "allow local network / send local network traffic" option.
 
 With that combination the cast works while everything else still goes through the VPN tunnel.
+
+### Black screen / video won't start
+
+If a cast starts but the picture stays black, PhoneTV shows a yellow warning on the player screen after about 30 seconds with no video frame rendered: *"Video isn't rendering. If the screen stays black, restart this device and cast again."* The warning disappears automatically once the first frame renders.
+
+A Fire TV's hardware video decoders can wedge after a decoder crash (a `vpud` fault), and only a device restart clears it. PhoneTV also prefers H.264 whenever a stream offers it, because the Fire TV's VP9 hardware decoder has been observed to crash intermittently.
 
 ## What happens on each source
 
