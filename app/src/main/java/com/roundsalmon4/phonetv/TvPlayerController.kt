@@ -4,14 +4,14 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.media3.common.C
-import androidx.media3.common.Cue
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
-import androidx.media3.common.text.Cues
+import androidx.media3.common.text.Cue
+import androidx.media3.common.text.CueGroup
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -82,7 +82,7 @@ class TvPlayerController(context: Context) {
             emitStatus()
         }
 
-        override fun onCues(cues: Cues) {
+        override fun onCues(cues: CueGroup) {
             _currentCues.value = cues.cues
         }
     }
