@@ -34,6 +34,13 @@ class CastReceiver(
     port: Int = 8484
 ) : WebSocketServer(InetSocketAddress(port), 2) {
 
+    init {
+        // Drop dead sender connections quickly: if the phone app exits without
+        // a clean close (or its network path flaps), don't keep the TV thinking
+        // it is still casting for the library's default 60s.
+        connectionLostTimeout = 10
+    }
+
     private val json = Json { ignoreUnknownKeys = true }
     private val clients = mutableSetOf<WebSocket>()
 
