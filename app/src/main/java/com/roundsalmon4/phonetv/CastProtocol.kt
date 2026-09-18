@@ -13,7 +13,8 @@ data class CastMessage(
     val subtitles: List<CastSubtitle>? = null,
     val quality: Int? = null,
     val activeSubtitleIndex: Int? = null,
-    val subtitleIndex: Int? = null
+    val subtitleIndex: Int? = null,
+    val message: String? = null
 )
 
 @Serializable

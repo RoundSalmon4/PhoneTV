@@ -204,6 +204,7 @@ private fun PlayerScreen(
     var controlsVisible by remember { mutableStateOf(true) }
     val focus = remember { FocusRequester() }
     val cues by controller.currentCues.collectAsState()
+    val hangWarning by controller.hangWarning.collectAsState()
 
     // TV remote Back ends the cast and returns to the pairing screen.
     BackHandler(onBack = onStopCast)
@@ -237,6 +238,22 @@ private fun PlayerScreen(
     ) {
         player?.let { PlayerSurface(player = it, modifier = Modifier.fillMaxSize()) }
         SubtitleOverlay(cues = cues, modifier = Modifier.align(Alignment.BottomCenter))
+        AnimatedVisibility(
+            visible = hangWarning,
+            modifier = Modifier.align(Alignment.Center),
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Text(
+                text = "Video isn't rendering. If the screen stays black, restart this device and cast again.",
+                color = Color(0xFFFFC107),
+                fontSize = 26.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .background(Color(0xB3000000))
+                    .padding(horizontal = 24.dp, vertical = 16.dp)
+            )
+        }
         AnimatedVisibility(
             visible = controlsVisible,
             modifier = Modifier.align(Alignment.TopCenter),

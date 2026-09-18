@@ -2,7 +2,9 @@ package com.roundsalmon4.phonetv
 
 import android.content.Context
 import android.net.Uri
+import android.os.SystemClock
 import android.util.Log
+import android.widget.Toast
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
@@ -56,6 +58,12 @@ class TvPlayerController(context: Context) {
     // One-shot recovery: a fatal decoder/OS error restarts the current media
     // once so a transient Fire TV video-codec crash doesn't freeze the cast.
     private var recoveredFromError = false
+    // True once the first video frame has been handed to the display. Used by
+    // the watchdog to tell "slowly buffering" from "decoder is wedged".
+    private var hasRenderedFrame = false
+    private var playRequestedAt = 0L
+    private val _hangWarning = MutableStateFlow(false)
+    val hangWarning: StateFlow<Boolean> = _hangWarning.asStateFlow()
 
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -104,6 +112,11 @@ class TvPlayerController(context: Context) {
             Log.i(TAG, "onCues: ${cues.cues.size} cue(s) into overlay")
             _currentCues.value = cues.cues
         }
+
+        override fun onRenderedFirstFrame(player: Player) {
+            hasRenderedFrame = true
+            if (_hangWarning.value) _hangWarning.value = false
+        }
     }
 
     val isPlaying: Boolean
@@ -140,12 +153,33 @@ class TvPlayerController(context: Context) {
             var tickCount = 0
             while (true) {
                 if (++tickCount % 20 == 0) {
-                    Log.i(TAG, "ticker: state=${_status.value.state} cues=${_currentCues.value.size}")
+                    Log.i(TAG, "ticker: state=${_status.value.state} cues=${_currentCues.value.size} hang=${_hangWarning.value}")
                 }
+                updateHangWarning()
                 emitStatus()
                 delay(500)
             }
         }
+    }
+
+    /**
+     * Flags the black-screen case: after a play request the decoder should
+     * hand over its first frame within a few seconds. If 30s pass with no
+     * frame and no position progress while stuck buffering/ready, the device's
+     * video decode path is likely wedged and a restart is the fix. The flag
+     * clears itself the moment a frame renders.
+     */
+    private fun updateHangWarning() {
+        val p = player ?: return
+        if (p.playbackState == Player.STATE_IDLE || p.playbackState == Player.STATE_ENDED) {
+            if (_hangWarning.value) _hangWarning.value = false
+            return
+        }
+        val elapsed = SystemClock.elapsedRealtime() - playRequestedAt
+        val noProgress = p.currentPosition <= 0L
+        val stalled = !hasRenderedFrame && noProgress && elapsed > HANG_WARN_MS &&
+            (p.playbackState == Player.STATE_BUFFERING || p.playbackState == Player.STATE_READY)
+        if (_hangWarning.value != stalled) _hangWarning.value = stalled
     }
 
     private fun emitStatus() {
@@ -198,6 +232,9 @@ pendingQuality = quality?.takeIf { it > 0 }
         lastSubtitleList = subtitles
         desiredSpeed = speed?.takeIf { it > 0f }
         recoveredFromError = false
+        hasRenderedFrame = false
+        playRequestedAt = SystemClock.elapsedRealtime()
+        _hangWarning.value = false
         Log.i(TAG, "play: url=$url speed=$speed subtitle=$activeSubtitleIndex subs=${subtitles?.size}")
         _status.value = CastStatus(state = "buffering", title = title)
         p.setMediaItem(builder.build())
@@ -325,6 +362,14 @@ pendingQuality = quality?.takeIf { it > 0 }
         p.clearMediaItems()
         _status.value = CastStatus()
         _currentCues.value = emptyList()
+        hasRenderedFrame = false
+        _hangWarning.value = false
+    }
+
+    /** Shows a transient notice (a mirrored SponsorBlock skip message). */
+    fun showToast(text: String) {
+        Log.i(TAG, "toast: $text")
+        Toast.makeText(appContext, text, Toast.LENGTH_LONG).show()
     }
 
     fun release() {
@@ -338,5 +383,6 @@ pendingQuality = quality?.takeIf { it > 0 }
 
     private companion object {
         const val TAG = "TvPlayer"
+        const val HANG_WARN_MS = 30_000L
     }
 }
