@@ -102,7 +102,9 @@ class CastReceiver(
                         title = message.title,
                         positionMs = message.position,
                         subtitles = message.subtitles,
-                        quality = message.quality
+                        quality = message.quality,
+                        speed = message.speed,
+                        activeSubtitleIndex = message.activeSubtitleIndex
                     )
                 }
                 "pause" -> controller.pause()
