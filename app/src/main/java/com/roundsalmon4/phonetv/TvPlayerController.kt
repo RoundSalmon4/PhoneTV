@@ -199,6 +199,9 @@ pendingQuality = quality?.takeIf { it > 0 }
                 Log.i(TAG, "setSubtitle: auto")
             }
             indexArg == -1 -> {
+                // Disabling the text renderer stops cue delivery, but ExoPlayer
+                // may not emit an empty cue list, so clear any visible caption.
+                _currentCues.value = emptyList()
                 selector.setParameters(selector.buildUponParameters().setRendererDisabled(C.TRACK_TYPE_TEXT, true))
                 Log.i(TAG, "setSubtitle: off")
             }
