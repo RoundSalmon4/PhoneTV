@@ -87,7 +87,11 @@ class MainActivity : ComponentActivity() {
                 }
 
                 LaunchedEffect(Unit) {
-                    controller.status.collect { receiver.broadcastStatus(it) }
+                    // Broadcast on a worker thread: a slow/blocked sender socket
+                    // must not stall the UI thread and leave a black frame.
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        controller.status.collect { receiver.broadcastStatus(it) }
+                    }
                 }
                 AnimatedContent(
                     targetState = status.state == "idle",
