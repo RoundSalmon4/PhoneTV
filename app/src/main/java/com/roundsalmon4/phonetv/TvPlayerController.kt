@@ -219,18 +219,29 @@ pendingQuality = quality?.takeIf { it > 0 }
      */
     fun setSubtitle(indexArg: Int?) {
         val selector = trackSelector ?: return
-        val builder = selector.buildUponParameters().setRendererDisabled(C.TRACK_TYPE_TEXT, false)
         when {
             indexArg == null -> {
-                // Auto: enable the renderer and let ExoPlayer pick by language.
-                selector.setParameters(builder)
+                // Auto: enable text tracks, clear any explicit language so
+                // ExoPlayer can pick by language again.
+                selector.setParameters(
+                    selector.buildUponParameters()
+                        .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
+                        .setPreferredTextLanguage(null)
+                )
                 Log.i(TAG, "setSubtitle: auto")
             }
             indexArg == -1 -> {
-                // Disabling the text renderer stops cue delivery, but ExoPlayer
-                // may not emit an empty cue list, so clear any visible caption.
+                // Disabling text tracks stops cue delivery, but ExoPlayer may
+                // not emit an empty cue list, so also clear any visible caption.
+                // Note: track types must be disabled by type, not by renderer
+                // index -- setRendererDisabled(C.TRACK_TYPE_TEXT, ...) targets
+                // an out-of-range index and silently does nothing.
                 _currentCues.value = emptyList()
-                selector.setParameters(selector.buildUponParameters().setRendererDisabled(C.TRACK_TYPE_TEXT, true))
+                selector.setParameters(
+                    selector.buildUponParameters()
+                        .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
+                        .setPreferredTextLanguage(null)
+                )
                 Log.i(TAG, "setSubtitle: off")
             }
             else -> {
@@ -238,10 +249,17 @@ pendingQuality = quality?.takeIf { it > 0 }
                 // track selector picks the matching track automatically.
                 val lang = lastSubtitleList?.getOrNull(indexArg)?.languageCode
                 if (lang.isNullOrBlank()) {
-                    selector.setParameters(builder)
+                    selector.setParameters(
+                        selector.buildUponParameters()
+                            .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
+                    )
                     Log.i(TAG, "setSubtitle: index=$indexArg no language (auto)")
                 } else {
-                    selector.setParameters(builder.setPreferredTextLanguage(lang))
+                    selector.setParameters(
+                        selector.buildUponParameters()
+                            .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
+                            .setPreferredTextLanguage(lang)
+                    )
                     Log.i(TAG, "setSubtitle: index=$indexArg lang=$lang")
                 }
             }
