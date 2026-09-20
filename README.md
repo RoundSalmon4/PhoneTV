@@ -140,4 +140,13 @@ PhoneTube resolves the best playable URL before sending it to the TV. All source
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
-PhoneTV uses [AndroidX Media3 ExoPlayer](https://developer.android.com/media/media3) for playback.
+PhoneTV also credits its open source dependencies in-app (Settings-less pairing screen: press OK for Credits).
+
+| Library | Purpose | License | URL |
+|---------|---------|---------|-----|
+| Media3 ExoPlayer | Video playback engine | Apache 2.0 | https://developer.android.com/media/media3 |
+| OkHttp | HTTP client for stream fetching | Apache 2.0 | https://github.com/square/okhttp |
+| Java-WebSocket | WebSocket server for the cast connection | Apache 2.0 | https://github.com/TooTallNate/Java-WebSocket |
+| Jetpack Compose | UI toolkit | Apache 2.0 | https://developer.android.com/jetpack/compose |
+| Kotlin Coroutines | Async runtime | Apache 2.0 | https://github.com/Kotlin/kotlinx.coroutines |
+| kotlinx.serialization | JSON message protocol between the two apps | Apache 2.0 | https://github.com/Kotlin/kotlinx.serialization |

@@ -89,19 +89,30 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(Unit) {
                     controller.status.collect { receiver.broadcastStatus(it) }
                 }
+                var creditsOpen by remember { mutableStateOf(false) }
+                LaunchedEffect(status.state) {
+                    if (status.state != "idle") creditsOpen = false
+                }
                 AnimatedContent(
-                    targetState = status.state == "idle",
+                    targetState = Pair(status.state == "idle", creditsOpen),
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
                     label = "screen"
-                ) { isIdle ->
-                    if (isIdle) PairingScreen(clients > 0) else PlayerScreen(
-                        controller,
-                        status,
-                        onStopCast = {
-                            controller.stop()
-                            receiver.notifyStopped()
-                        }
-                    )
+                ) { (isIdle, credits) ->
+                    when {
+                        !isIdle -> PlayerScreen(
+                            controller,
+                            status,
+                            onStopCast = {
+                                controller.stop()
+                                receiver.notifyStopped()
+                            }
+                        )
+                        credits -> CreditsScreen(onBackClick = { creditsOpen = false })
+                        else -> PairingScreen(
+                            connected = clients > 0,
+                            onOpenCredits = { creditsOpen = true }
+                        )
+                    }
                 }
             }
         }
@@ -115,15 +126,17 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun PairingScreen(connected: Boolean) {
+private fun PairingScreen(connected: Boolean, onOpenCredits: () -> Unit) {
     var ipAddress by remember { mutableStateOf(getLocalIpAddress()) }
     val context = LocalContext.current
     val crashText = remember {
         context.getSharedPreferences(PhoneTvApp.PREFS, Context.MODE_PRIVATE)
             .getString("crash_text", null)
     }
+    val focus = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
+        focus.requestFocus()
         while (true) {
             ipAddress = getLocalIpAddress()
             delay(5000)
@@ -131,7 +144,21 @@ private fun PairingScreen(connected: Boolean) {
     }
 
     Box(
-        modifier = Modifier.fillMaxSize().background(Color(0xFF0D0D0D)),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0D0D0D))
+            .focusRequester(focus)
+            .focusable()
+            .onKeyEvent { event ->
+                if (event.type != KeyEventType.KeyDown) return@onKeyEvent false
+                when (event.key) {
+                    Key.DirectionCenter, Key.Enter -> {
+                        onOpenCredits()
+                        true
+                    }
+                    else -> false
+                }
+            },
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -158,6 +185,11 @@ private fun PairingScreen(connected: Boolean) {
                 fontSize = 40.sp,
                 fontWeight = FontWeight.Medium,
                 fontFamily = FontFamily.Monospace
+            )
+            Text(
+                text = "Press OK for Credits",
+                color = Color(0xFF666666),
+                fontSize = 16.sp
             )
 
             if (crashText != null) {
