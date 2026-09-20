@@ -18,11 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,23 +72,14 @@ private val credits = listOf(
 fun CreditsScreen(onBackClick: () -> Unit) {
     BackHandler(onBack = onBackClick)
     val scrollState = rememberScrollState()
-    val focus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { focus.requestFocus() }
+    val firstRowFocus = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) { firstRowFocus.requestFocus() }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0D0D0D))
-            .focusRequester(focus)
-            .focusable()
-            .onKeyEvent { event ->
-                if (event.type != KeyEventType.KeyDown) return@onKeyEvent false
-                when (event.key) {
-                    Key.DirectionUp -> scrollState.dispatchRawDelta(-120f)
-                    Key.DirectionDown -> scrollState.dispatchRawDelta(120f)
-                    else -> false
-                }
-            }
             .verticalScroll(scrollState)
             .padding(horizontal = 48.dp, vertical = 32.dp)
     ) {
@@ -106,7 +92,15 @@ fun CreditsScreen(onBackClick: () -> Unit) {
         )
 
         credits.forEachIndexed { index, credit ->
-            Column(modifier = Modifier.padding(vertical = 12.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusable()
+                    .then(
+                        if (index == 0) Modifier.focusRequester(firstRowFocus) else Modifier
+                    )
+                    .padding(vertical = 12.dp)
+            ) {
                 Text(
                     text = "${credit.name}  •  ${credit.license}",
                     color = Color.White,
