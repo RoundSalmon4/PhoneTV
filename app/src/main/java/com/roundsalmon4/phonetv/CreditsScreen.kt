@@ -89,12 +89,8 @@ fun CreditsScreen(onBackClick: () -> Unit) {
             .onKeyEvent { event ->
                 if (event.type != KeyEventType.KeyDown) return@onKeyEvent false
                 when (event.key) {
-                    Key.DirectionUp -> {
-                        scrollState.scrollBy(-120f); true
-                    }
-                    Key.DirectionDown -> {
-                        scrollState.scrollBy(120f); true
-                    }
+                    Key.DirectionUp -> scrollState.dispatchRawDelta(-120f)
+                    Key.DirectionDown -> scrollState.dispatchRawDelta(120f)
                     else -> false
                 }
             }
