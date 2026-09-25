@@ -62,12 +62,15 @@ import java.net.NetworkInterface
 class MainActivity : ComponentActivity() {
     private lateinit var controller: TvPlayerController
     private lateinit var receiver: CastReceiver
+    private lateinit var mdnsAdvertiser: MdnsAdvertiser
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         controller = TvPlayerController(this)
         receiver = CastReceiver(controller)
         receiver.start()
+        // Advertise over mDNS so a PhoneTube on the network finds this box.
+        mdnsAdvertiser = MdnsAdvertiser(this, receiver.port).also { it.start() }
         enableEdgeToEdge()
 
         setContent {
@@ -120,6 +123,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         receiver.stop()
+        mdnsAdvertiser.stop()
         controller.release()
         super.onDestroy()
     }

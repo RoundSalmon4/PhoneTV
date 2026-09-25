@@ -31,7 +31,7 @@ private class FixedConnectionHandshake : HandshakeImpl1Server() {
 
 class CastReceiver(
     private val controller: TvPlayerController,
-    port: Int = 8484
+    val port: Int = 8484
 ) : WebSocketServer(InetSocketAddress(port), 2) {
 
     private val json = Json { ignoreUnknownKeys = true }
