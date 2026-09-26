@@ -13,7 +13,7 @@ import java.util.UUID
  * typing an IP. The advertisement carries the WebSocket port, so discovery
  * resolves straight to the address used for a cast.
  */
-class MdnsAdvertiser(private val context: Context, private val port: Int) {
+class MdnsAdvertiser(private val context: Context, private val serverPort: Int) {
 
     private var nsdManager: NsdManager? = null
     private var registrationListener: NsdManager.RegistrationListener? = null
@@ -39,8 +39,9 @@ class MdnsAdvertiser(private val context: Context, private val port: Int) {
         val service = NsdServiceInfo().apply {
             serviceName = buildName()
             serviceType = SERVICE_TYPE
-            this.port = port
+            this.port = serverPort
         }
+        Log.i(TAG, "advertising PhoneTV on port $serverPort ($SERVICE_TYPE)")
         try {
             manager.registerService(service, NsdManager.PROTOCOL_DNS_SD, listener)
             nsdManager = manager
