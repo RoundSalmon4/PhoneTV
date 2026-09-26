@@ -352,6 +352,17 @@ pendingQuality = quality?.takeIf { it > 0 }
         player?.volume = volume.coerceIn(0f, 1f)
     }
 
+    /**
+     * Shifts video frame release relative to audio to correct perceived
+     * lip-sync issues. Positive delays video, negative advances it.
+     */
+    fun setAvSyncOffset(offsetMs: Int) {
+        val p = player ?: return
+        val clamped = offsetMs.coerceIn(-2000, 2000)
+        Log.i(TAG, "setAvSyncOffset: ${clamped}ms")
+        p.setVideoFrameReleaseTimeOffsetUs(clamped * 1000L)
+    }
+
     fun setSpeed(speed: Float) {
         player?.setPlaybackSpeed(speed.coerceIn(0.25f, 3f))
     }

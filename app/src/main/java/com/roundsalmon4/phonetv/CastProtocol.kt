@@ -14,6 +14,7 @@ data class CastMessage(
     val quality: Int? = null,
     val activeSubtitleIndex: Int? = null,
     val subtitleIndex: Int? = null,
+    val avSyncMs: Int? = null,
     val message: String? = null
 )
 
