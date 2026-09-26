@@ -103,12 +103,12 @@ class DelayedAudioSink(
         while (queue.isNotEmpty()) {
             val head = queue.first()
             // Only release a chunk once keeping it would push us below the delay target.
-            if (heldBytes - head.size < keepBytes) break
+            if (heldBytes - head.bytes.size < keepBytes) break
             val buffer = ByteBuffer.wrap(head.bytes)
             val handled = inner.handleBuffer(buffer, head.presentationTimeUs, head.accessUnitCount)
             if (!handled) break
             queue.removeFirst()
-            heldBytes -= head.size
+            heldBytes -= head.bytes.size
         }
     }
 
