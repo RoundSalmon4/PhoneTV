@@ -31,8 +31,8 @@ private class FixedConnectionHandshake : HandshakeImpl1Server() {
 
 class CastReceiver(
     private val controller: TvPlayerController,
-    val port: Int = 8484
-) : WebSocketServer(InetSocketAddress(port), 2) {
+    val serverPort: Int = 8484
+) : WebSocketServer(InetSocketAddress(serverPort), 2) {
 
     private val json = Json { ignoreUnknownKeys = true }
     private val clients = mutableSetOf<WebSocket>()
@@ -84,7 +84,7 @@ class CastReceiver(
     }
 
     override fun onStart() {
-        Log.i(TAG, "CastReceiver started on port $port")
+        Log.i(TAG, "CastReceiver started on port $serverPort")
     }
 
     private fun dispatch(raw: String) {
@@ -150,7 +150,7 @@ class CastReceiver(
 
     override fun start() {
         super.start()
-        Log.i(TAG, "CastReceiver starting on port $port")
+        Log.i(TAG, "CastReceiver starting on port $serverPort")
     }
 
     override fun stop() {

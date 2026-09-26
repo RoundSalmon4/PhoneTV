@@ -70,7 +70,7 @@ class MainActivity : ComponentActivity() {
         receiver = CastReceiver(controller)
         receiver.start()
         // Advertise over mDNS so a PhoneTube on the network finds this box.
-        mdnsAdvertiser = MdnsAdvertiser(this, receiver.port).also { it.start() }
+        mdnsAdvertiser = MdnsAdvertiser(this, receiver.serverPort).also { it.start() }
         enableEdgeToEdge()
 
         setContent {
