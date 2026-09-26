@@ -18,6 +18,8 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.audio.AudioSink
+import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +37,21 @@ class TvPlayerController(context: Context) {
 
     private val appContext = context.applicationContext
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    // A/V sync: media3 1.8 dropped the video release offset API, so audio is
+    // delayed instead via a custom AudioSink that holds PCM back. The sender
+    // (PhoneTube) controls the delay.
+    private val avSyncSink = DelayedAudioSink(
+        DefaultAudioSink.Builder(appContext).build()
+    )
+    private val avSyncRenderersFactory: DefaultRenderersFactory = object :
+        DefaultRenderersFactory(appContext) {
+        override fun buildAudioSink(
+            context: Context,
+            enableFloatOutput: Boolean,
+            enableAudioTrackPlaybackParams: Boolean
+        ): AudioSink = avSyncSink
+    }.setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
 
     private val _status = MutableStateFlow(CastStatus())
     val status: StateFlow<CastStatus> = _status
@@ -130,8 +147,6 @@ class TvPlayerController(context: Context) {
     }
 
     private fun createPlayer() {
-        val renderersFactory = DefaultRenderersFactory(appContext)
-            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
         val selector = DefaultTrackSelector(appContext)
         // The VP9 hardware decoder on this Fire TV intermittently crashes
         // (vpud SIGSEGV), so prefer H.264 whenever the manifest offers it.
@@ -141,7 +156,7 @@ class TvPlayerController(context: Context) {
         trackSelector = selector
         val loadControl = DefaultLoadControl()
         player = ExoPlayer.Builder(appContext)
-            .setRenderersFactory(renderersFactory)
+            .setRenderersFactory(avSyncRenderersFactory)
             .setTrackSelector(selector)
             .setLoadControl(loadControl)
             .build()
@@ -353,14 +368,17 @@ pendingQuality = quality?.takeIf { it > 0 }
     }
 
     /**
-     * Shifts video frame release relative to audio to correct perceived
-     * lip-sync issues. Positive delays video, negative advances it.
+     * Delays audio relative to video to correct perceived lip-sync issues.
+     * Positive values delay audio; the sink re-arms via a same-position seek.
      */
     fun setAvSyncOffset(offsetMs: Int) {
         val p = player ?: return
-        val clamped = offsetMs.coerceIn(-2000, 2000)
-        Log.i(TAG, "setAvSyncOffset: ${clamped}ms")
-        p.setVideoFrameReleaseTimeOffsetUs(clamped * 1000L)
+        val clamped = offsetMs.coerceIn(0, 2000)
+        Log.i(TAG, "setAvSyncOffset (audio delay): ${clamped}ms")
+        avSyncSink.setDelayMs(clamped)
+        p.pause()
+        p.seekTo(p.currentPosition.coerceAtLeast(0L))
+        p.play()
     }
 
     fun setSpeed(speed: Float) {
