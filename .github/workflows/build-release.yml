@@ -64,12 +64,6 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.version }}
           name: ${{ steps.version.outputs.version }}
-          body: |
-            PhoneTV receiver for PhoneTube.
-
-            Install this on your TV, then pair it from PhoneTube's player cast menu (Settings -> Cast (PhoneTV) to add by IP).
-
-            **Downloader code:** enter in the Downloader app on your TV.
           files: app/build/outputs/apk/release/phonetv.apk
           generate_release_notes: false
           draft: false
